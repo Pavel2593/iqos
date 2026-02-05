@@ -4,9 +4,10 @@ import type { Catalog } from '../domain/Catalog'
 import { OfferCard } from '../../shared/ui/OfferCard/OfferCard'
 import { ChipsNav } from '../../shared/ui/ChipsNav/ChipsNav'
 import { useSorted } from '../../shared/hooks/useSorted'
+import { Pagination } from '../../shared/ui/Pagination/Pagination'
 import styles from './CatalogPage.module.css'
 
-const DEFAULT_VISIBLE_COUNT = 12
+const DEFAULT_PAGE_SIZE = 8
 
 function formatPrice(price: number | null, currencyCode: string | null): string {
   if (price == null) return '—'
@@ -54,11 +55,11 @@ export function CatalogPage() {
   >({ status: 'loading' })
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
-  const [visibleCount, setVisibleCount] = useState(DEFAULT_VISIBLE_COUNT)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
-    let isActive = true;
-    (async () => {
+    let isActive = true
+    ;(async () => {
       try {
         const catalog = await getCatalog()
         if (!isActive) return
@@ -70,7 +71,7 @@ export function CatalogPage() {
         setState({ status: 'error', message })
       }
     })()
-      
+
     return () => {
       isActive = false
     }
@@ -78,7 +79,7 @@ export function CatalogPage() {
 
   function handleCategoryChange(next: number | null) {
     setSelectedCategoryId(next)
-    setVisibleCount(DEFAULT_VISIBLE_COUNT)
+    setPage(1)
   }
 
   const categories = state.status === 'ok' ? state.catalog.categories : []
@@ -103,7 +104,16 @@ export function CatalogPage() {
 
   const offers = useSorted(filteredOffers, compareOffers)
 
-  const visibleOffers = state.status === 'ok' ? offers.slice(0, visibleCount) : []
+  const totalPages = Math.max(1, Math.ceil(offers.length / DEFAULT_PAGE_SIZE))
+
+  useEffect(() => {
+    setPage((p) => Math.max(1, Math.min(p, totalPages)))
+  }, [totalPages])
+
+  const visibleOffers =
+    state.status === 'ok'
+      ? offers.slice((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE)
+      : []
 
   return (
     <div className={styles['catalog-page']}>
@@ -155,17 +165,15 @@ export function CatalogPage() {
               ))}
             </section>
 
-            {visibleCount < offers.length && (
-              <div className={styles['catalog-page__load-more-wrap']}>
-                <button
-                  className={styles['catalog-page__load-more']}
-                  type="button"
-                  onClick={() => setVisibleCount((c) => c + 24)}
-                >
-                  Показать еще
-                </button>
-              </div>
-            )}
+            <div className={styles['catalog-page__pagination']}>
+              <Pagination
+                page={page}
+                pageSize={DEFAULT_PAGE_SIZE}
+                totalItems={offers.length}
+                onChange={setPage}
+                ariaLabel="Пагинация каталога"
+              />
+            </div>
           </>
         )}
       </div>

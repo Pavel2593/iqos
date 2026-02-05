@@ -56,24 +56,9 @@
   padding: 24px 0;
 }
 
-.catalog-page__load-more-wrap {
+.catalog-page__pagination {
   display: flex;
   justify-content: center;
-  margin-top: 18px;
-}
-
-.catalog-page__load-more {
-  border-radius: 999px;
-  border: 1px solid var(--iqos-border);
-  background: var(--iqos-surface);
-  padding: 10px 16px;
-  font-weight: 700;
-  cursor: pointer;
-  color: var(--iqos-text);
-}
-
-.catalog-page__load-more:hover {
-  border-color: rgba(0, 163, 163, 0.45);
 }
 
 
