@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { BluetoothConnectPage } from '../bluetooth/ui/BluetoothConnectPage'
 import { Basket } from '../basket/ui/Basket'
-import { CatalogPage } from '../catalog/ui/CatalogPage'
+import CatalogPage from '../catalog/ui/CatalogPage'
 
 export function App() {
   return (

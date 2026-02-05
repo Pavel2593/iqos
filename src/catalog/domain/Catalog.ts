@@ -11,6 +11,7 @@ export type Catalog = {
     name: string | null
   }>
   offers: Array<{
+    uid: string
     id: string
     idNum: number | null
     available: boolean | null

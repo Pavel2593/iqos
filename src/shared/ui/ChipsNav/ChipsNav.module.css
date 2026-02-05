@@ -1,0 +1,46 @@
+.chips-nav {
+  padding: 0 0 12px;
+  margin: 0 0 8px;
+}
+
+.chips-nav__list {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  /* скрываем скроллбар, но сохраняем возможность скролла */
+  scrollbar-width: none; /* Firefox */
+}
+
+.chips-nav__list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+.chips-nav__chip {
+  border-radius: 999px;
+  border: 1px solid var(--iqos-border);
+  background: var(--iqos-surface);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--iqos-text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.chips-nav__chip:hover {
+  border-color: rgba(0, 163, 163, 0.45);
+  transform: translateY(-1px);
+}
+
+.chips-nav__chip--active {
+  border-color: rgba(0, 163, 163, 0.55);
+  background: rgba(0, 163, 163, 0.10);
+}
+
+

@@ -28,6 +28,10 @@
   font-size: 12px;
 }
 
+.catalog-page__nav {
+  margin-bottom: 6px;
+}
+
 .catalog-page__grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));

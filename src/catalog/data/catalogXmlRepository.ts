@@ -5,9 +5,7 @@ const CATALOG_XML_PATH = '/catalog.xml'
 
 function ensureParsedXml(xmlText: string): Document {
   const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlText, 'application/xml')
-
-  return doc
+  return parser.parseFromString(xmlText, 'application/xml')
 }
 
 function getTextContent(el: Element | null): string | null {
@@ -44,14 +42,14 @@ function toInt(value: string | null): number | null {
 }
 
 function parseShop(ymlCatalog: Element | null): Catalog['shop'] {
-    const shopEl = ymlCatalog?.querySelector('shop') ?? null
-    if (!shopEl) return null
-  
-    return {
-      name: getTextContent(shopEl.querySelector('name')),
-      company: getTextContent(shopEl.querySelector('company')),
-      url: getTextContent(shopEl.querySelector('url')),
-    }
+  const shopEl = ymlCatalog?.querySelector('shop') ?? null
+  if (!shopEl) return null
+
+  return {
+    name: getTextContent(shopEl.querySelector('name')),
+    company: getTextContent(shopEl.querySelector('company')),
+    url: getTextContent(shopEl.querySelector('url')),
+  }
 }
 
 function parseCategories(ymlCatalog: Element | null): Catalog['categories'] {
@@ -72,34 +70,6 @@ function parseCategories(ymlCatalog: Element | null): Catalog['categories'] {
   return categories
 }
 
-function parseOffers(ymlCatalog: Element | null): Catalog['offers'] {
-    const offers: Catalog['offers'] = []
-    const offerEls = ymlCatalog?.querySelectorAll('offers > offer') ?? []
-  
-    offerEls.forEach((offerEl) => {
-      const id = offerEl.getAttribute('id')
-      if (!id) return
-  
-      offers.push({
-        id,
-        idNum: toInt(id),
-        available: toBooleanFromXmlAttr(offerEl.getAttribute('available')),
-        name: getTextContent(offerEl.querySelector('name')),
-        description: normalizeOfferDescription(
-          getTextContent(offerEl.querySelector('description')),
-        ),
-        price: toNumber(getTextContent(offerEl.querySelector('price'))),
-        currencyCode: getTextContent(offerEl.querySelector('currencyId')),
-        currencyId: toInt(getTextContent(offerEl.querySelector('currencyId'))),
-        categoryId: toInt(getTextContent(offerEl.querySelector('categoryId'))),
-        url: getTextContent(offerEl.querySelector('url')),
-        picture: getTextContent(offerEl.querySelector('picture')),
-      })
-    })
-  
-    return offers
-  }
-
 function toNumber(text: string | null): number | null {
   if (!text) return null
   const n = Number(text.replace(',', '.'))
@@ -113,6 +83,43 @@ function toBooleanFromXmlAttr(value: string | null): boolean | null {
   return null
 }
 
+function parseOffers(ymlCatalog: Element | null): Catalog['offers'] {
+  const offers: Catalog['offers'] = []
+  const offerEls = ymlCatalog?.querySelectorAll('offers > offer') ?? []
+
+  offerEls.forEach((offerEl, idx) => {
+    const id = offerEl.getAttribute('id')
+    if (!id) return
+
+    const url = getTextContent(offerEl.querySelector('url'))
+
+    offers.push({
+      uid: `${id}|${url ?? ''}|${idx}`,
+      id,
+      idNum: toInt(id),
+      available: toBooleanFromXmlAttr(offerEl.getAttribute('available')),
+      name: getTextContent(offerEl.querySelector('name')),
+      description: normalizeOfferDescription(getTextContent(offerEl.querySelector('description'))),
+      price: toNumber(getTextContent(offerEl.querySelector('price'))),
+      currencyCode: getTextContent(offerEl.querySelector('currencyId')),
+      currencyId: toInt(getTextContent(offerEl.querySelector('currencyId'))),
+      categoryId: toInt(getTextContent(offerEl.querySelector('categoryId'))),
+      url,
+      picture: getTextContent(offerEl.querySelector('picture')),
+    })
+  })
+
+  return offers
+}
+
+function buildCategoryIdsWithOffers(offers: Catalog['offers']): Set<number> {
+  const set = new Set<number>()
+  for (const o of offers) {
+    if (o.categoryId != null) set.add(o.categoryId)
+  }
+  return set
+}
+
 async function getCatalog(): Promise<Catalog> {
   const res = await fetch(CATALOG_XML_PATH)
   if (!res.ok) {
@@ -122,15 +129,17 @@ async function getCatalog(): Promise<Catalog> {
   const xmlText = await res.text()
   const doc = ensureParsedXml(xmlText)
 
-  // Пока читаем ТОЛЬКО тег `yml_catalog` (как подготовка к дальнейшему разбору).
   const ymlCatalog = doc.querySelector('yml_catalog')
   const date = ymlCatalog?.getAttribute('date') ?? null
 
   const shop = parseShop(ymlCatalog)
 
-  const categories = parseCategories(ymlCatalog)
-
   const offers = parseOffers(ymlCatalog)
+  const categoryIdsWithOffers = buildCategoryIdsWithOffers(offers)
+
+  const categories = parseCategories(ymlCatalog).filter((c) =>
+    categoryIdsWithOffers.has(c.id),
+  )
 
   return { date, shop, categories, offers }
 }
