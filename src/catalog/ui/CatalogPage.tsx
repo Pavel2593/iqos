@@ -5,29 +5,14 @@ import { OfferCard } from '../../shared/ui/OfferCard/OfferCard'
 import { ChipsNav } from '../../shared/ui/ChipsNav/ChipsNav'
 import { useSorted } from '../../shared/hooks/useSorted'
 import { Pagination } from '../../shared/ui/Pagination/Pagination'
+import { formatPrice } from '../../shared/lib/formatPrice'
+import { compareNullableNumber } from '../../shared/lib/compareNullableNumber'
 import styles from './CatalogPage.module.css'
 
 const DEFAULT_PAGE_SIZE = 8
 
-function formatPrice(price: number | null, currencyCode: string | null): string {
-  if (price == null) return '—'
-  const formatted = new Intl.NumberFormat('ru-RU').format(price)
-  if (currencyCode === 'RUB') return `${formatted} ₽`
-  if (currencyCode) return `${formatted} ${currencyCode}`
-  return formatted
-}
-
-function compareNullableNumber(a: number | null, b: number | null): number {
-  if (a == null && b == null) return 0
-  if (a == null) return 1
-  if (b == null) return -1
-  return a - b
-}
-
 function buildCategoryNavItems(categories: Catalog['categories']) {
-  return [...categories]
-    .sort((a, b) => a.id - b.id)
-    .map((c) => ({ id: c.id, label: c.name?.trim() || `#${c.id}` }))
+  return categories.map((c) => ({ id: c.id, label: c.name?.trim() || `#${c.id}` }))
 }
 
 function getSelectedCategoryLabel(
@@ -40,11 +25,7 @@ function getSelectedCategoryLabel(
 }
 
 function compareOffers(a: Catalog['offers'][number], b: Catalog['offers'][number]) {
-  const byCategory = compareNullableNumber(a.categoryId, b.categoryId)
-  if (byCategory !== 0) return byCategory
-  const byName = (a.name ?? '').localeCompare(b.name ?? '', 'ru')
-  if (byName !== 0) return byName
-  return a.id.localeCompare(b.id)
+  return compareNullableNumber(a.categoryId, b.categoryId)
 }
 
 export function CatalogPage() {
