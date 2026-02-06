@@ -4,7 +4,9 @@ import type { Catalog } from '../domain/Catalog'
 import { OfferCard } from '../../shared/ui/OfferCard/OfferCard'
 import { ChipsNav } from '../../shared/ui/ChipsNav/ChipsNav'
 import { useSorted } from '../../shared/hooks/useSorted'
+import { useFilter } from '../../shared/hooks/useFilter'
 import { Pagination } from '../../shared/ui/Pagination/Pagination'
+import { SearchInput } from '../../shared/ui/SearchInput/SearchInput'
 import { formatPrice } from '../../shared/lib/formatPrice'
 import { compareNullableNumber } from '../../shared/lib/compareNullableNumber'
 import styles from './CatalogPage.module.css'
@@ -36,6 +38,7 @@ export function CatalogPage() {
   >({ status: 'loading' })
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -63,6 +66,11 @@ export function CatalogPage() {
     setPage(1)
   }
 
+  function handleQueryChange(next: string) {
+    setQuery(next)
+    setPage(1)
+  }
+
   const categories = state.status === 'ok' ? state.catalog.categories : []
 
   const navCategoryItems = useMemo(
@@ -83,7 +91,8 @@ export function CatalogPage() {
       : allOffers.filter((o) => o.categoryId === selectedCategoryId)
   }, [state, selectedCategoryId])
 
-  const offers = useSorted(filteredOffers, compareOffers)
+  const searchedOffers = useFilter(filteredOffers, query, (o) => o.name)
+  const offers = useSorted(searchedOffers, compareOffers)
 
   const totalPages = Math.max(1, Math.ceil(offers.length / DEFAULT_PAGE_SIZE))
 
@@ -120,6 +129,15 @@ export function CatalogPage() {
 
         {state.status === 'ok' && (
           <>
+            <div className={styles['catalog-page__search']}>
+              <SearchInput
+                value={query}
+                onChange={handleQueryChange}
+                placeholder="Поиск по названию"
+                ariaLabel="Поиск по каталогу"
+              />
+            </div>
+
             <div className={styles['catalog-page__nav']}>
               <ChipsNav
                 ariaLabel="Категории"

@@ -32,6 +32,10 @@
   margin-bottom: 6px;
 }
 
+.catalog-page__search {
+  margin: 10px 0 10px;
+}
+
 .catalog-page__grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
